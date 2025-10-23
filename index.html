@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gerenciamento e Transparência de Contratos - UENP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent-primary: #3b82f6;
+            --accent-secondary: #10b981;
+            --border-color: #333333;
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--accent-primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--bg-tertiary);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        input, select, textarea {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.75rem;
+            border-radius: 8px;
+            width: 100%;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background-color: var(--bg-tertiary);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        tr:hover {
+            background-color: var(--bg-tertiary);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            z-index: 2000;
+            display: none;
+        }
+        
+        .toast.success {
+            border-left: 4px solid var(--accent-secondary);
+        }
+        
+        .toast.error {
+            border-left: 4px solid #ef4444;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .badge-active {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .badge-inactive {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .badge-pending {
+            background-color: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+    </style>
+</head>
+<body>
+     Header 
+    <header class="border-b border-gray-800 sticky top-0 bg-black/80 backdrop-blur-lg z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-xl">
+                        UENP
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">Sistema de Contratos</h1>
+                        <p class="text-sm text-gray-400">Transparência e Gestão</p>
+                    </div>
+                </div>
+                <div id="authButtons" class="flex gap-2">
+                    <button id="loginBtn" class="btn-secondary">Entrar</button>
+                    <button id="logoutBtn" class="btn-primary" style="display: none;">Sair</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+     Main Content 
+    <main class="container mx-auto px-4 py-8">
+         Dashboard Stats 
+        <div id="dashboard" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="stat-card">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400 text-sm">Total de Contratos</span>
+                    <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <div class="text-3xl font-bold" id="totalContracts">0</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400 text-sm">Valor Total</span>
+                    <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="text-3xl font-bold" id="totalValue">R$ 0,00</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-gray-400 text-sm">Contratos Ativos</span>
+                    <svg class="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="text-3xl font-bold" id="activeContracts">0</div>
+            </div>
+        </div>
+
+         Search and Filters 
+        <div class="card mb-6">
+            <div class="flex flex-col md:flex-row gap-4 mb-4">
+                <div class="flex-1">
+                    <input type="text" id="searchInput" placeholder="Buscar por número, descrição ou fornecedor..." class="w-full">
+                </div>
+                <div class="flex gap-2">
+                    <select id="statusFilter" class="w-full md:w-auto">
+                        <option value="">Todos os Status</option>
+                        <option value="Ativo">Ativo</option>
+                        <option value="Inativo">Inativo</option>
+                        <option value="Pendente">Pendente</option>
+                    </select>
+                    <button id="addContractBtn" class="btn-primary whitespace-nowrap" style="display: none;">
+                        + Novo Contrato
+                    </button>
+                </div>
+            </div>
+        </div>
+
+         Contracts Table 
+        <div class="card overflow-x-auto">
+            <div id="loadingIndicator" class="text-center py-8">
+                <div class="loading mx-auto"></div>
+                <p class="text-gray-400 mt-4">Carregando contratos...</p>
+            </div>
+            <table id="contractsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Descrição</th>
+                        <th>Fornecedor</th>
+                        <th>Valor</th>
+                        <th>Início</th>
+                        <th>Fim</th>
+                        <th>Status</th>
+                        <th id="actionsHeader" style="display: none;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="contractsBody">
+                </tbody>
+            </table>
+            <div id="noResults" style="display: none;" class="text-center py-8 text-gray-400">
+                Nenhum contrato encontrado.
+            </div>
+        </div>
+    </main>
+
+     Login Modal 
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-6">Login Administrativo</h2>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">E-mail</label>
+                    <input type="email" id="loginEmail" required placeholder="admin@uenp.edu.br">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Senha</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                </div>
+                <div class="flex gap-3">
+                    <button type="submit" class="btn-primary flex-1">
+                        <span id="loginBtnText">Entrar</span>
+                        <span id="loginBtnLoading" style="display: none;" class="loading"></span>
+                    </button>
+                    <button type="button" id="cancelLoginBtn" class="btn-secondary">Cancelar</button>
+                </div>
+                <div id="loginError" class="mt-4 text-red-500 text-sm" style="display: none;"></div>
+            </form>
+        </div>
+    </div>
+
+     Contract Form Modal 
+    <div id="contractModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-6" id="modalTitle">Novo Contrato</h2>
+            <form id="contractForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Número do Contrato *</label>
+                        <input type="text" id="contractNumber" required placeholder="Ex: 001/2025">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Status *</label>
+                        <select id="contractStatus" required>
+                            <option value="Ativo">Ativo</option>
+                            <option value="Inativo">Inativo</option>
+                            <option value="Pendente">Pendente</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Descrição *</label>
+                    <textarea id="contractDescription" required rows="3" placeholder="Descrição do contrato"></textarea>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Fornecedor *</label>
+                    <input type="text" id="contractSupplier" required placeholder="Nome do fornecedor">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Valor (R$) *</label>
+                        <input type="number" id="contractValue" required step="0.01" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Modalidade</label>
+                        <input type="text" id="contractModality" placeholder="Ex: Pregão Eletrônico">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Início da Vigência *</label>
+                        <input type="date" id="contractStartDate" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Fim da Vigência *</label>
+                        <input type="date" id="contractEndDate" required>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button type="submit" class="btn-primary flex-1">
+                        <span id="saveBtnText">Salvar</span>
+                        <span id="saveBtnLoading" style="display: none;" class="loading"></span>
+                    </button>
+                    <button type="button" id="cancelContractBtn" class="btn-secondary">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+     Delete Confirmation Modal 
+    <div id="deleteModal" class="modal">
+        <div class="modal-content max-w-md">
+            <h2 class="text-2xl font-bold mb-4">Confirmar Exclusão</h2>
+            <p class="text-gray-400 mb-6">Tem certeza que deseja excluir este contrato? Esta ação não pode ser desfeita.</p>
+            <div class="flex gap-3">
+                <button id="confirmDeleteBtn" class="btn-primary flex-1 bg-red-600 hover:bg-red-700">
+                    Excluir
+                </button>
+                <button id="cancelDeleteBtn" class="btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+     Toast Notification 
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Firebase Configuration - REPLACE WITH YOUR CONFIG
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // State
+        let currentUser = null;
+        let contracts = [];
+        let editingContractId = null;
+        let deleteContractId = null;
+
+        // DOM Elements
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const loginModal = document.getElementById('loginModal');
+        const contractModal = document.getElementById('contractModal');
+        const deleteModal = document.getElementById('deleteModal');
+        const addContractBtn = document.getElementById('addContractBtn');
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const contractsBody = document.getElementById('contractsBody');
+        const contractsTable = document.getElementById('contractsTable');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const noResults = document.getElementById('noResults');
+        const actionsHeader = document.getElementById('actionsHeader');
+
+        // Auth State Observer
+        auth.onAuthStateChanged((user) => {
+            currentUser = user;
+            updateUIForAuth(user);
+            if (user) {
+                loadContracts();
+            } else {
+                loadContracts();
+            }
+        });
+
+        // Update UI based on auth state
+        function updateUIForAuth(user) {
+            if (user) {
+                loginBtn.style.display = 'none';
+                logoutBtn.style.display = 'block';
+                addContractBtn.style.display = 'block';
+                actionsHeader.style.display = 'table-cell';
+            } else {
+                loginBtn.style.display = 'block';
+                logoutBtn.style.display = 'none';
+                addContractBtn.style.display = 'none';
+                actionsHeader.style.display = 'none';
+            }
+        }
+
+        // Login
+        loginBtn.addEventListener('click', () => {
+            loginModal.classList.add('active');
+        });
+
+        document.getElementById('cancelLoginBtn').addEventListener('click', () => {
+            loginModal.classList.remove('active');
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginError').style.display = 'none';
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            document.getElementById('loginBtnText').style.display = 'none';
+            document.getElementById('loginBtnLoading').style.display = 'inline-block';
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                loginModal.classList.remove('active');
+                document.getElementById('loginForm').reset();
+                showToast('Login realizado com sucesso!', 'success');
+            } catch (error) {
+                document.getElementById('loginError').textContent = 'Erro ao fazer login. Verifique suas credenciais.';
+                document.getElementById('loginError').style.display = 'block';
+            } finally {
+                document.getElementById('loginBtnText').style.display = 'inline';
+                document.getElementById('loginBtnLoading').style.display = 'none';
+            }
+        });
+
+        // Logout
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                showToast('Logout realizado com sucesso!', 'success');
+            } catch (error) {
+                showToast('Erro ao fazer logout.', 'error');
+            }
+        });
+
+        // Load Contracts
+        async function loadContracts() {
+            try {
+                loadingIndicator.style.display = 'block';
+                contractsTable.style.display = 'none';
+                noResults.style.display = 'none';
+
+                const snapshot = await db.collection('contracts').orderBy('createdAt', 'desc').get();
+                contracts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                updateDashboard();
+                renderContracts();
+            } catch (error) {
+                console.error('Error loading contracts:', error);
+                showToast('Erro ao carregar contratos.', 'error');
+            } finally {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        // Update Dashboard
+        function updateDashboard() {
+            const total = contracts.length;
+            const totalValue = contracts.reduce((sum, c) => sum + (parseFloat(c.value) || 0), 0);
+            const active = contracts.filter(c => c.status === 'Ativo').length;
+
+            document.getElementById('totalContracts').textContent = total;
+            document.getElementById('totalValue').textContent = formatCurrency(totalValue);
+            document.getElementById('activeContracts').textContent = active;
+        }
+
+        // Render Contracts
+        function renderContracts() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const statusValue = statusFilter.value;
+
+            let filtered = contracts.filter(contract => {
+                const matchesSearch = 
+                    contract.number.toLowerCase().includes(searchTerm) ||
+                    contract.description.toLowerCase().includes(searchTerm) ||
+                    contract.supplier.toLowerCase().includes(searchTerm);
+                
+                const matchesStatus = !statusValue || contract.status === statusValue;
+                
+                return matchesSearch && matchesStatus;
+            });
+
+            if (filtered.length === 0) {
+                contractsTable.style.display = 'none';
+                noResults.style.display = 'block';
+                return;
+            }
+
+            contractsTable.style.display = 'table';
+            noResults.style.display = 'none';
+
+            contractsBody.innerHTML = filtered.map(contract => `
+                <tr>
+                    <td class="font-medium">${contract.number}</td>
+                    <td>${contract.description}</td>
+                    <td>${contract.supplier}</td>
+                    <td class="font-medium">${formatCurrency(contract.value)}</td>
+                    <td>${formatDate(contract.startDate)}</td>
+                    <td>${formatDate(contract.endDate)}</td>
+                    <td>
+                        <span class="badge badge-${contract.status.toLowerCase()}">
+                            ${contract.status}
+                        </span>
+                    </td>
+                    ${currentUser ? `
+                        <td>
+                            <div class="flex gap-2">
+                                <button onclick="editContract('${contract.id}')" class="text-blue-500 hover:text-blue-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="confirmDelete('${contract.id}')" class="text-red-500 hover:text-red-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    ` : ''}
+                </tr>
+            `).join('');
+        }
+
+        // Search and Filter
+        searchInput.addEventListener('input', renderContracts);
+        statusFilter.addEventListener('change', renderContracts);
+
+        // Add Contract
+        addContractBtn.addEventListener('click', () => {
+            editingContractId = null;
+            document.getElementById('modalTitle').textContent = 'Novo Contrato';
+            document.getElementById('contractForm').reset();
+            contractModal.classList.add('active');
+        });
+
+        // Edit Contract
+        window.editContract = (id) => {
+            editingContractId = id;
+            const contract = contracts.find(c => c.id === id);
+            
+            document.getElementById('modalTitle').textContent = 'Editar Contrato';
+            document.getElementById('contractNumber').value = contract.number;
+            document.getElementById('contractStatus').value = contract.status;
+            document.getElementById('contractDescription').value = contract.description;
+            document.getElementById('contractSupplier').value = contract.supplier;
+            document.getElementById('contractValue').value = contract.value;
+            document.getElementById('contractModality').value = contract.modality || '';
+            document.getElementById('contractStartDate').value = contract.startDate;
+            document.getElementById('contractEndDate').value = contract.endDate;
+            
+            contractModal.classList.add('active');
+        };
+
+        // Cancel Contract Form
+        document.getElementById('cancelContractBtn').addEventListener('click', () => {
+            contractModal.classList.remove('active');
+            document.getElementById('contractForm').reset();
+            editingContractId = null;
+        });
+
+        // Save Contract
+        document.getElementById('contractForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const contractData = {
+                number: document.getElementById('contractNumber').value,
+                status: document.getElementById('contractStatus').value,
+                description: document.getElementById('contractDescription').value,
+                supplier: document.getElementById('contractSupplier').value,
+                value: parseFloat(document.getElementById('contractValue').value),
+                modality: document.getElementById('contractModality').value,
+                startDate: document.getElementById('contractStartDate').value,
+                endDate: document.getElementById('contractEndDate').value,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            document.getElementById('saveBtnText').style.display = 'none';
+            document.getElementById('saveBtnLoading').style.display = 'inline-block';
+
+            try {
+                if (editingContractId) {
+                    await db.collection('contracts').doc(editingContractId).update(contractData);
+                    showToast('Contrato atualizado com sucesso!', 'success');
+                } else {
+                    contractData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection('contracts').add(contractData);
+                    showToast('Contrato criado com sucesso!', 'success');
+                }
+                
+                contractModal.classList.remove('active');
+                document.getElementById('contractForm').reset();
+                editingContractId = null;
+                loadContracts();
+            } catch (error) {
+                console.error('Error saving contract:', error);
+                showToast('Erro ao salvar contrato.', 'error');
+            } finally {
+                document.getElementById('saveBtnText').style.display = 'inline';
+                document.getElementById('saveBtnLoading').style.display = 'none';
+            }
+        });
+
+        // Confirm Delete
+        window.confirmDelete = (id) => {
+            deleteContractId = id;
+            deleteModal.classList.add('active');
+        };
+
+        document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+            deleteModal.classList.remove('active');
+            deleteContractId = null;
+        });
+
+        // Delete Contract
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+            try {
+                await db.collection('contracts').doc(deleteContractId).delete();
+                showToast('Contrato excluído com sucesso!', 'success');
+                deleteModal.classList.remove('active');
+                deleteContractId = null;
+                loadContracts();
+            } catch (error) {
+                console.error('Error deleting contract:', error);
+                showToast('Erro ao excluir contrato.', 'error');
+            }
+        });
+
+        // Utility Functions
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // Close modals on outside click
+        [loginModal, contractModal, deleteModal].forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
