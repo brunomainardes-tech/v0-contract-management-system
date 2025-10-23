@@ -158,8 +158,14 @@ export function AddContractDialog() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="extension_forecast">Previsão de Prorrogação</Label>
-              <Input id="extension_forecast" name="extension_forecast" type="date" />
+              <Label htmlFor="extension_forecast">Previsão de Prorrogação (Data)</Label>
+              <Input
+                id="extension_forecast"
+                name="extension_forecast"
+                type="date"
+                placeholder="Data prevista para prorrogação"
+              />
+              <p className="text-xs text-gray-500">Deixe em branco se não houver previsão de prorrogação</p>
             </div>
           </div>
 

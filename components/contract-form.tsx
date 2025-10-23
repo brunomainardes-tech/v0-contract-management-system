@@ -194,7 +194,9 @@ export function ContractForm({ contract, trigger }: ContractFormProps) {
                   name="extension_forecast"
                   type="date"
                   defaultValue={contract?.extension_forecast || ""}
+                  placeholder="Data prevista"
                 />
+                <p className="text-xs text-gray-500">Data prevista para prorrogação do contrato</p>
               </div>
             </div>
 

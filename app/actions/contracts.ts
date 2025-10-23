@@ -289,10 +289,16 @@ function detectColumnMapping(headers: string[]): Record<string, number> {
     else if (normalized === "processo") map.process_number = index
     else if (normalized === "gestor do contrato") map.manager_name = index
     else if (normalized === "fiscal do contrato") map.inspector_name = index
+    else if (
+      normalized === "previsão de prorrogação" ||
+      normalized === "previsao de prorrogacao" ||
+      normalized.includes("prorrogação") ||
+      normalized.includes("prorrogacao")
+    )
+      map.extension_forecast = index
     else if (normalized.includes("contrato") && normalized.includes("n")) map.contract_number = index
     else if (normalized.includes("descrição") || normalized.includes("descricao")) map.description = index
     else if (normalized.includes("empresa") || normalized.includes("fornecedor")) map.contractor = index
-    else if (normalized.includes("previsão de extensão")) map.extension_forecast = index
     else if (normalized.includes("observações")) map.observations = index
   })
 

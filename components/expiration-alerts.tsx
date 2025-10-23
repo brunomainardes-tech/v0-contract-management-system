@@ -90,7 +90,7 @@ export function ExpirationAlerts({ contracts }: ExpirationAlertsProps) {
                   <div className="space-y-3 max-h-96 overflow-y-auto">
                     {alert.contracts.map((contract) => {
                       const daysLeft = calculateDaysUntilExpiration(contract.end_date)
-                      const canExtend = contract.extension_forecast?.toLowerCase() === "sim"
+                      const canExtend = contract.extension_forecast && contract.extension_forecast.trim() !== ""
 
                       return (
                         <div key={contract.id} className="bg-white rounded-lg p-3 border border-gray-200 space-y-2">
@@ -121,6 +121,12 @@ export function ExpirationAlerts({ contracts }: ExpirationAlertsProps) {
                               {canExtend ? "Sim" : "Não"}
                             </span>
                           </div>
+
+                          {canExtend && (
+                            <div className="text-xs text-gray-500">
+                              Previsão: {new Date(contract.extension_forecast).toLocaleDateString("pt-BR")}
+                            </div>
+                          )}
                         </div>
                       )
                     })}
