@@ -3,6 +3,7 @@ import { ContractsTable } from "@/components/contracts-table"
 import { AuthButton } from "@/components/auth-button"
 import { CSVImport } from "@/components/csv-import"
 import { DashboardStats } from "@/components/dashboard-stats"
+import { AddContractDialog } from "@/components/add-contract-dialog"
 import { FileText } from "lucide-react"
 import type { Contract } from "@/lib/types"
 
@@ -63,15 +64,18 @@ export default async function Home() {
           )}
 
           <section className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <FileText className="h-6 w-6 text-blue-600" />
-                Contratos Administrativos
-              </h2>
-              <p className="text-gray-600 mt-1">
-                Consulte todos os contratos administrativos da UENP. Use os filtros abaixo para encontrar contratos
-                específicos.
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                  <FileText className="h-6 w-6 text-blue-600" />
+                  Contratos Administrativos
+                </h2>
+                <p className="text-gray-600 mt-1">
+                  Consulte todos os contratos administrativos da UENP. Use os filtros abaixo para encontrar contratos
+                  específicos.
+                </p>
+              </div>
+              {isAuthenticated && <AddContractDialog />}
             </div>
             <ContractsTable contracts={contractsList} isAuthenticated={isAuthenticated} />
           </section>

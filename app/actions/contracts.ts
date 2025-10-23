@@ -14,7 +14,18 @@ export async function createContract(formData: FormData) {
     start_date: formData.get("start_date") as string,
     end_date: formData.get("end_date") as string,
     status: formData.get("status") as string,
-    category: formData.get("category") as string,
+    category: (formData.get("category") as string) || null,
+    gms_number: (formData.get("gms_number") as string) || null,
+    modality: (formData.get("modality") as string) || null,
+    process_number: (formData.get("process_number") as string) || null,
+    manager_name: (formData.get("manager_name") as string) || null,
+    manager_contact: (formData.get("manager_contact") as string) || null,
+    manager_appointment: (formData.get("manager_appointment") as string) || null,
+    inspector_name: (formData.get("inspector_name") as string) || null,
+    inspector_contact: (formData.get("inspector_contact") as string) || null,
+    inspector_appointment: (formData.get("inspector_appointment") as string) || null,
+    extension_forecast: (formData.get("extension_forecast") as string) || null,
+    observations: (formData.get("observations") as string) || null,
   }
 
   const { error } = await supabase.from("contracts").insert([contractData])
@@ -38,7 +49,18 @@ export async function updateContract(id: string, formData: FormData) {
     start_date: formData.get("start_date") as string,
     end_date: formData.get("end_date") as string,
     status: formData.get("status") as string,
-    category: formData.get("category") as string,
+    category: (formData.get("category") as string) || null,
+    gms_number: (formData.get("gms_number") as string) || null,
+    modality: (formData.get("modality") as string) || null,
+    process_number: (formData.get("process_number") as string) || null,
+    manager_name: (formData.get("manager_name") as string) || null,
+    manager_contact: (formData.get("manager_contact") as string) || null,
+    manager_appointment: (formData.get("manager_appointment") as string) || null,
+    inspector_name: (formData.get("inspector_name") as string) || null,
+    inspector_contact: (formData.get("inspector_contact") as string) || null,
+    inspector_appointment: (formData.get("inspector_appointment") as string) || null,
+    extension_forecast: (formData.get("extension_forecast") as string) || null,
+    observations: (formData.get("observations") as string) || null,
   }
 
   const { error } = await supabase.from("contracts").update(contractData).eq("id", id)
@@ -148,6 +170,8 @@ export async function importContractsFromCSV(csvText: string) {
           inspector_name: values[columnMap.inspector_name]?.substring(0, 500) || null,
           inspector_contact: values[columnMap.inspector_contact]?.substring(0, 500) || null,
           inspector_appointment: values[columnMap.inspector_appointment]?.substring(0, 500) || null,
+          extension_forecast: values[columnMap.extension_forecast]?.substring(0, 200) || null,
+          observations: values[columnMap.observations]?.substring(0, 1000) || null,
         }
 
         console.log(`[v0] Parsed contract ${i}:`, {
@@ -245,6 +269,8 @@ function detectColumnMapping(headers: string[]): Record<string, number> {
     inspector_name: -1,
     inspector_contact: -1,
     inspector_appointment: -1,
+    extension_forecast: -1,
+    observations: -1,
   }
 
   headers.forEach((header, index) => {
@@ -266,6 +292,8 @@ function detectColumnMapping(headers: string[]): Record<string, number> {
     else if (normalized.includes("contrato") && normalized.includes("n")) map.contract_number = index
     else if (normalized.includes("descrição") || normalized.includes("descricao")) map.description = index
     else if (normalized.includes("empresa") || normalized.includes("fornecedor")) map.contractor = index
+    else if (normalized.includes("previsão de extensão")) map.extension_forecast = index
+    else if (normalized.includes("observações")) map.observations = index
   })
 
   // Track which "Contato" and "Nomeação" columns we've assigned
@@ -314,6 +342,8 @@ function detectColumnMapping(headers: string[]): Record<string, number> {
     inspector_name: headers[map.inspector_name],
     inspector_contact: headers[map.inspector_contact],
     inspector_appointment: headers[map.inspector_appointment],
+    extension_forecast: headers[map.extension_forecast],
+    observations: headers[map.observations],
   })
 
   return map
