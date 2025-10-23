@@ -6,6 +6,7 @@ import { DashboardStats } from "@/components/dashboard-stats"
 import { AddContractDialog } from "@/components/add-contract-dialog"
 import { FileText } from "lucide-react"
 import type { Contract } from "@/lib/types"
+import { ExpirationAlerts } from "@/components/expiration-alerts"
 
 export default async function Home() {
   const supabase = await getSupabaseServerClient()
@@ -54,6 +55,12 @@ export default async function Home() {
           {isAuthenticated && (
             <section>
               <DashboardStats stats={stats} />
+            </section>
+          )}
+
+          {isAuthenticated && (
+            <section>
+              <ExpirationAlerts contracts={contractsList} />
             </section>
           )}
 
