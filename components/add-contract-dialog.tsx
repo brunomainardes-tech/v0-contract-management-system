@@ -158,14 +158,17 @@ export function AddContractDialog() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="extension_forecast">Previsão de Prorrogação (Data)</Label>
-              <Input
-                id="extension_forecast"
-                name="extension_forecast"
-                type="date"
-                placeholder="Data prevista para prorrogação"
-              />
-              <p className="text-xs text-gray-500">Deixe em branco se não houver previsão de prorrogação</p>
+              <Label htmlFor="can_extend">Prorrogação de Contrato</Label>
+              <Select name="can_extend" defaultValue="false">
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Sim</SelectItem>
+                  <SelectItem value="false">Não</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500">Escolha se o contrato pode ser prorrogado</p>
             </div>
           </div>
 

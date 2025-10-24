@@ -123,12 +123,10 @@ export function ContractDetailsDrawer({ contract, open, onOpenChange }: Contract
                 <label className="text-xs text-muted-foreground">Fim da Vigência</label>
                 <p className="text-sm font-medium mt-1">{formatDate(contract.end_date)}</p>
               </div>
-              {contract.extension_forecast && (
-                <div className="bg-muted/50 rounded-lg p-3">
-                  <label className="text-xs text-muted-foreground">Previsão de Prorrogação</label>
-                  <p className="text-sm font-medium mt-1">{formatDate(contract.extension_forecast)}</p>
-                </div>
-              )}
+              <div className="bg-muted/50 rounded-lg p-3">
+                <label className="text-xs text-muted-foreground">Prorrogação</label>
+                <p className="text-sm font-medium mt-1">{contract.can_extend ? "Sim" : "Não"}</p>
+              </div>
             </div>
           </section>
 

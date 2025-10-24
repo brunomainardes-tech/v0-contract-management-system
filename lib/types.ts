@@ -25,7 +25,7 @@ export interface Contract {
   inspector_appointment: string | null
 
   // Extension and alerts
-  extension_forecast: string | null
+  can_extend: boolean
   alert_30_days: string | null
   alert_60_days: string | null
   alert_90_days: string | null
